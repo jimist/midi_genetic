@@ -1,4 +1,6 @@
 import random
+from sklearn.externals import joblib
+import numpy as np
 
 
 class Genetic:
@@ -8,6 +10,9 @@ class Genetic:
     notes_before = []
     notes_after = []
     mutation_rate = 0.1
+    guesser = None
+    total_best_score = 1000000
+    best_population = []
 
     def __init__(self, song):
         for index, note in enumerate(song):
@@ -27,19 +32,45 @@ class Genetic:
                 song[index] = self.max
         self.min = min(song)
 
+        self.guesser = joblib.load("guesser")
+
     def make_population(self, count):
         populations = []
         for i in range(count):
             temp_list = [random.randint(self.min, self.max) for iter in range(self.genome_length)]
             populations.append(temp_list)
-        print("generated {} populations with length of {}!".format(count, self.genome_length))
+        # print("generated {} populations with length of {}!".format(count, self.genome_length))
         return populations
 
     def score_population(self, pop):
-        return random.randint(0, 100)
+        pop = self.notes_before[-5:] + pop + self.notes_after[:5]
+        total_score = 0
+        reducers = []
+        test_data = []
+        for index, note in enumerate(pop[5:-5]):
+            real_index = index + 5
+            test_data_temp = pop[real_index - 5: real_index] + pop[real_index + 1:real_index + 5]
+            # print(test_data_temp)
+            reducer = test_data_temp[0]
+            reducers.append(reducer)
+            for ii, nn in enumerate(test_data_temp):
+                test_data_temp[ii] = nn - reducer
+            test_data.append(test_data_temp)
+
+        test_results = self.guesser.predict(np.array(test_data))
+        for ti, tv in enumerate(test_results):
+            test_results[ti] = tv + reducers[ti]
+
+        for index, note in enumerate(pop[5:-5]):
+            guessed_note = test_results[index]  # find out what was supposed to be here
+            temp_score = abs(guessed_note - note)
+            # print(temp_score)
+            total_score += temp_score
+        # print(total_score)
+        return total_score
 
     def mutate_population(self, pop):
-        rand_position = random.randint(0, self.genome_length-1)
+        rand_position = random.randint(0, self.genome_length - 1)
         random_note = random.randint(self.min, self.max)
         # print("mutating a population at position {} with the note {}!".format(rand_position, random_note))
         pop[rand_position] = random_note
@@ -81,8 +112,15 @@ class Genetic:
         i = 0
         while True:
             # score each population
+            min_score = 10000
             for j, pop in enumerate(populations):
                 scores[j] = self.score_population(populations[j])
+                if scores[j] < self.total_best_score:
+                    self.total_best_score = scores[j]
+                    self.best_population = pop
+                if scores[j] < min_score:
+                    min_score = scores[j]
+            print("best score was {}".format(min_score))
             # sort populations by score. since the lower the score the better population is, first 30 are the best
             populations = [x for _, x in sorted(zip(scores, populations))]
             # after sorting populations break if the iteration counts are finished
@@ -98,3 +136,7 @@ class Genetic:
             new_population[int(0.6 * populations_count):] = self.make_population(int(0.4 * populations_count))
             populations = new_population
             i += 1
+
+        print("best score in total was {}".format(self.total_best_score))
+        print(self.best_population)
+        return self.best_population

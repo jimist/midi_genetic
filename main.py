@@ -36,4 +36,4 @@ test_file_names = [f for f in listdir(TEST_FILES_DIRECTORY) if isfile(join(TEST_
 # print(test_file_names)
 test_song = extract_data_from_file(TEST_FILES_DIRECTORY+test_file_names[0])
 gen = Genetic(test_song)
-gen.run()
+final_guessed_populations = gen.run(150)

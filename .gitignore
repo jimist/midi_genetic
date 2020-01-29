@@ -9,3 +9,5 @@ song_sources
 
 venv
 !venv/.gitkeep
+
+guesser
