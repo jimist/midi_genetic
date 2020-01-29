@@ -11,3 +11,4 @@ venv
 !venv/.gitkeep
 
 guesser
+test_results

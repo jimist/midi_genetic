@@ -4,6 +4,8 @@ from mido import MidiFile
 from os import listdir
 from os.path import isfile, join
 
+import pickle
+
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
@@ -34,6 +36,13 @@ def extract_data_from_file(file_path):
 test_file_names = [f for f in listdir(TEST_FILES_DIRECTORY) if isfile(join(TEST_FILES_DIRECTORY, f))]
 
 # print(test_file_names)
-test_song = extract_data_from_file(TEST_FILES_DIRECTORY+test_file_names[0])
-gen = Genetic(test_song)
-final_guessed_populations = gen.run(150)
+test_results = {}
+for test_name in test_file_names:
+    test_song = extract_data_from_file(TEST_FILES_DIRECTORY + test_name)
+    gen = Genetic(test_song)
+    final_guessed_population = gen.run(300)
+    test_results[test_name] = final_guessed_population
+
+print(test_results)
+with open('test_results', 'wb') as f:
+    pickle.dump(test_results, f)

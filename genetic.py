@@ -120,7 +120,7 @@ class Genetic:
                     self.best_population = pop
                 if scores[j] < min_score:
                     min_score = scores[j]
-            print("best score was {}".format(min_score))
+            # print("best score was {}".format(min_score))
             # sort populations by score. since the lower the score the better population is, first 30 are the best
             populations = [x for _, x in sorted(zip(scores, populations))]
             # after sorting populations break if the iteration counts are finished
